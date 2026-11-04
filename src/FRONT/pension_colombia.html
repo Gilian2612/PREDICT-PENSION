@@ -1,0 +1,295 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><style>body{margin:0}[hidden]{display:none!important}</style></head><body>
+<title>Calculadora de mesada Colpensiones</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: formulario a la izquierda, resultado fijo a la derecha; en celular el resultado va primero. */
+:root {
+  --bg: #f3f6f7; --panel: #ffffff; --fg: #17272d; --muted: #566a72; --line: #cdd9dd;
+  --accent: #0b5d6f; --accent-fg: #ffffff; --accent-soft: #dcedf1;
+  --warn-bg: #fdf3d8; --warn-fg: #6b4e00; --bad-bg: #fbe4e1; --bad-fg: #8c2318;
+  --ok-bg: #dff2e6; --ok-fg: #17603a;
+  --sans: "Libre Franklin", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #10191d; --panel: #18242a; --fg: #e6eef0; --muted: #9db0b7; --line: #30434b;
+  --accent: #6cc3d6; --accent-fg: #08262e; --accent-soft: #1d3a43;
+  --warn-bg: #3a2f10; --warn-fg: #f2d68a; --bad-bg: #40201c; --bad-fg: #f5b5ac;
+  --ok-bg: #173526; --ok-fg: #9fdcb8; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #10191d; --panel: #18242a; --fg: #e6eef0; --muted: #9db0b7; --line: #30434b;
+  --accent: #6cc3d6; --accent-fg: #08262e; --accent-soft: #1d3a43;
+  --warn-bg: #3a2f10; --warn-fg: #f2d68a; --bad-bg: #40201c; --bad-fg: #f5b5ac;
+  --ok-bg: #173526; --ok-fg: #9fdcb8; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.5 var(--sans); }
+.pagina {
+  max-width: 1040px; margin: 0 auto; display: grid; gap: 20px;
+  padding-block: 28px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+header { display: grid; gap: 4px; }
+h1 { margin: 0; font-size: 1.75rem; line-height: 1.2; font-weight: 700; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 65ch; }
+.columnas { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 360px); gap: 20px; align-items: start; }
+form { display: grid; gap: 20px; min-width: 0; }
+fieldset { margin: 0; padding: 18px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); min-width: 0; display: grid; gap: 14px; }
+legend { padding: 0 6px; font-weight: 600; }
+.rejilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+.campo { display: grid; gap: 4px; min-width: 0; align-content: start; }
+label { font-weight: 500; font-size: .9rem; }
+.ayuda { color: var(--muted); font-size: .8rem; }
+input, select, textarea {
+  width: 100%; min-width: 0; padding: 8px 10px; font: inherit; color: var(--fg);
+  background: var(--bg); border: 1px solid var(--line); border-radius: 5px;
+}
+input[type="number"], textarea { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+input[type="checkbox"] { width: 18px; height: 18px; flex: none; accent-color: var(--accent); }
+:is(input, select, textarea, button, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.check { display: flex; gap: 10px; align-items: center; font-weight: 500; }
+.fila { display: grid; grid-template-columns: 1fr 1fr 1.2fr 76px; gap: 8px; align-items: end; }
+.encabezado { font-size: .8rem; color: var(--muted); font-weight: 500; }
+.filas { display: grid; gap: 8px; }
+button { font: inherit; font-weight: 500; cursor: pointer; border-radius: 5px; padding: 8px 12px; border: 1px solid var(--line); background: transparent; color: var(--fg); }
+button:hover { border-color: var(--accent); color: var(--accent); }
+#agregar { justify-self: start; border-color: var(--accent); color: var(--accent); }
+summary { cursor: pointer; font-weight: 600; }
+details { display: grid; gap: 14px; }
+details[open] summary { margin-bottom: 14px; }
+.resultado { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); display: grid; gap: 14px; padding: 20px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); min-width: 0; }
+.etiqueta { font-size: .78rem; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+#mesada { font: 600 2.2rem/1.15 var(--mono); color: var(--accent); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+#equivalente { color: var(--muted); font-size: .88rem; }
+dl { margin: 0; display: grid; gap: 7px; padding-top: 14px; border-top: 1px solid var(--line); }
+dl div { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+dt { color: var(--muted); font-size: .9rem; }
+dd { margin: 0; font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: .9rem; text-align: right; }
+.pastilla { padding: 1px 8px; border-radius: 99px; font-family: var(--sans); font-size: .8rem; font-weight: 600; }
+.si { background: var(--ok-bg); color: var(--ok-fg); }
+.no { background: var(--warn-bg); color: var(--warn-fg); }
+#avisos { display: grid; gap: 8px; }
+.aviso { margin: 0; padding: 9px 11px; border-radius: 5px; font-size: .85rem; background: var(--warn-bg); color: var(--warn-fg); }
+.aviso.error { background: var(--bad-bg); color: var(--bad-fg); font-weight: 500; }
+.nota { margin: 0; font-size: .8rem; color: var(--muted); }
+.ejemplo { padding: 8px 12px; border-radius: 5px; background: var(--accent-soft); font-size: .88rem; }
+@media (max-width: 800px) {
+  .columnas { grid-template-columns: minmax(0, 1fr); }
+  .resultado { position: static; order: -1; }
+}
+@media (max-width: 520px) {
+  .fila { grid-template-columns: 1fr 1fr; }
+  .fila .salario { grid-column: 1 / -1; }
+  .fila .quitar { grid-column: 1 / -1; }
+  .encabezado { display: none; }
+  .fila .oculta { display: block; }
+}
+@media (min-width: 521px) { .fila .oculta { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); } }
+</style>
+
+<div class="pagina">
+  <header>
+    <h1>Calculadora de mesada Colpensiones</h1>
+    <p>Estima la pensión de vejez con el promedio más alto entre los últimos 10 años cotizados y toda la vida laboral.</p>
+  </header>
+  <div class="ejemplo">Los datos cargados son un ejemplo inventado. Reemplázalos por los reales.</div>
+
+  <div class="columnas">
+    <form id="formulario" novalidate>
+      <fieldset>
+        <legend>Persona</legend>
+        <div class="rejilla">
+          <div class="campo">
+            <label for="sexo">Sexo</label>
+            <select id="sexo"><option value="hombre">Hombre</option><option value="mujer">Mujer</option></select>
+          </div>
+          <div class="campo">
+            <label for="añoNacimiento">Año de nacimiento</label>
+            <input id="añoNacimiento" type="number" min="1900" max="2100" step="1" value="1966">
+          </div>
+          <div class="campo">
+            <label for="semanasTotales">Semanas al pensionarse</label>
+            <input id="semanasTotales" type="number" min="0" step="1" value="1500">
+          </div>
+          <div class="campo">
+            <label for="semanasCorte">Semanas al 1 de abril de 2027</label>
+            <input id="semanasCorte" type="number" min="0" step="1" value="1250">
+            <span class="ayuda">Define el régimen de transición.</span>
+          </div>
+          <div class="campo">
+            <label for="añoPension">Año de pensión</label>
+            <input id="añoPension" type="number" min="1900" max="2100" step="1" placeholder="Al cumplir la edad">
+            <span class="ayuda">Déjalo vacío para usar el año en que cumple la edad.</span>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Historial de cotización</legend>
+        <span class="ayuda">Usa el formato AAAA-MM. Los períodos no se pueden cruzar y los meses sin cotizar se dejan por fuera.</span>
+        <div class="fila encabezado" aria-hidden="true"><span>Desde</span><span>Hasta</span><span>Salario mensual (COP)</span><span></span></div>
+        <div class="filas" id="filas"></div>
+        <button type="button" id="agregar">Agregar período</button>
+        <label class="check"><input id="pesosHoy" type="checkbox" checked> Los salarios ya están en pesos de hoy</label>
+        <div class="campo" id="bloqueIpc" hidden>
+          <label for="ipc">IPC del DANE por año</label>
+          <textarea id="ipc" rows="4" placeholder="2015=100&#10;2016=105"></textarea>
+          <span class="ayuda">Una línea por año, con cada año del historial y el año de pensión. Los valores de arriba son solo el formato.</span>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <details>
+          <summary>Parámetros legales</summary>
+          <div class="rejilla">
+            <div class="campo">
+              <label for="smmlv">Salario mínimo mensual</label>
+              <input id="smmlv" type="number" min="1" step="1" value="1750905">
+              <span class="ayuda">Valor de 2026. Actualízalo cada año.</span>
+            </div>
+            <div class="campo">
+              <label for="mujerDesde">Semanas adicionales para mujeres</label>
+              <select id="mujerDesde">
+                <option value="1300">Contar desde 1.300 semanas</option>
+                <option value="minimo">Contar desde el mínimo del año</option>
+              </select>
+              <span class="ayuda">Las fuentes no coinciden. La otra opción se muestra en los avisos.</span>
+            </div>
+          </div>
+          <label class="check"><input id="soloBloques" type="checkbox" checked> Sumar solo bloques completos de 50 semanas</label>
+        </details>
+      </fieldset>
+    </form>
+
+    <aside class="resultado" aria-live="polite">
+      <div>
+        <div class="etiqueta">Mesada estimada</div>
+        <div id="mesada">$0</div>
+        <div id="equivalente"></div>
+      </div>
+      <dl id="detalle"></dl>
+      <div id="avisos"></div>
+      <p class="nota">Es una estimación, no el valor oficial que reconocería Colpensiones.</p>
+    </aside>
+  </div>
+</div>
+
+<script src="pension_calculo.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+
+function agregarFila(desde = "", hasta = "", salario = "") {
+  const fila = document.createElement("div");
+  fila.className = "fila";
+  const n = agregarFila.n = (agregarFila.n || 0) + 1;
+  fila.innerHTML = `
+    <div class="campo"><label class="oculta ayuda" for="desde${n}">Desde</label><input id="desde${n}" class="desde" inputmode="numeric" placeholder="AAAA-MM" maxlength="7"></div>
+    <div class="campo"><label class="oculta ayuda" for="hasta${n}">Hasta</label><input id="hasta${n}" class="hasta" inputmode="numeric" placeholder="AAAA-MM" maxlength="7"></div>
+    <div class="campo salario"><label class="oculta ayuda" for="salario${n}">Salario mensual (COP)</label><input id="salario${n}" class="monto" type="number" min="0" step="1000"></div>
+    <button type="button" class="quitar" aria-label="Quitar período">Quitar</button>`;
+  fila.querySelector(".desde").value = desde;
+  fila.querySelector(".hasta").value = hasta;
+  fila.querySelector(".monto").value = salario;
+  $("filas").append(fila);
+}
+
+function leerNumero(id, nombre) {
+  const v = $(id).value.trim();
+  if (v === "" || !isFinite(+v) || +v < 0) throw new Error(`Escribe un valor válido en ${nombre}.`);
+  return +v;
+}
+
+function leerIpc() {
+  const ipc = {};
+  for (const linea of $("ipc").value.split("\n")) {
+    if (!linea.trim()) continue;
+    const m = /^\s*(\d{4})\s*[=:,;\s]\s*([\d.]+)\s*$/.exec(linea);
+    if (!m || !(+m[2] > 0)) throw new Error(`Revisa la línea de IPC "${linea.trim()}". Usa el formato 2015=100.`);
+    ipc[+m[1]] = +m[2];
+  }
+  return ipc;
+}
+
+function leerFormulario() {
+  const historial = [...document.querySelectorAll(".filas .fila")].map(f => [
+    f.querySelector(".desde").value, f.querySelector(".hasta").value, +f.querySelector(".monto").value,
+  ]);
+  if (!historial.length) throw new Error("Agrega al menos un período al historial.");
+  const smmlv = leerNumero("smmlv", "salario mínimo");
+  if (!(smmlv > 0)) throw new Error("El salario mínimo debe ser mayor que cero.");
+  const enPesosDeHoy = $("pesosHoy").checked;
+  return {
+    sexo: $("sexo").value,
+    añoNacimiento: leerNumero("añoNacimiento", "año de nacimiento"),
+    semanasTotales: leerNumero("semanasTotales", "semanas al pensionarse"),
+    semanasCorte: leerNumero("semanasCorte", "semanas al 1 de abril de 2027"),
+    añoPension: $("añoPension").value.trim() === "" ? null : leerNumero("añoPension", "año de pensión"),
+    historial, enPesosDeHoy, ipc: enPesosDeHoy ? {} : leerIpc(), smmlv,
+    mujerDesde: $("mujerDesde").value, soloBloques: $("soloBloques").checked,
+  };
+}
+
+function fila(dt, dd, html = false) {
+  const div = document.createElement("div");
+  const a = document.createElement("dt"); a.textContent = dt;
+  const b = document.createElement("dd");
+  if (html) b.append(dd); else b.textContent = dd;
+  div.append(a, b);
+  return div;
+}
+
+function aviso(texto, error = false) {
+  const el = document.createElement("p");
+  el.className = "aviso" + (error ? " error" : "");
+  el.textContent = texto;
+  return el;
+}
+
+function mostrar() {
+  $("bloqueIpc").hidden = $("pesosHoy").checked;
+  const detalle = $("detalle"), avisos = $("avisos");
+  detalle.replaceChildren();
+  avisos.replaceChildren();
+  try {
+    const p = leerFormulario();
+    const r = calcular(p);
+    $("mesada").textContent = pesos(r.mesada);
+    $("equivalente").textContent = `${(r.mesada / p.smmlv).toFixed(2).replace(".", ",")} salarios mínimos al mes`;
+    const pastilla = document.createElement("span");
+    pastilla.className = "pastilla " + (r.transicion ? "si" : "no");
+    pastilla.textContent = r.transicion ? "Sí" : "No";
+    detalle.append(
+      fila("Año de pensión", String(r.año)),
+      fila("Semanas mínimas", miles(r.minimo)),
+      fila("Régimen de transición", pastilla, true),
+      fila("IBL últimos 10 años", pesos(r.ibl10)),
+      fila("IBL toda la vida", r.aplicaVida ? pesos(r.iblVida) : "No aplica"),
+      fila("IBL usado", pesos(r.ibl)),
+      fila("Tasa de reemplazo", pct(r.tasa)),
+    );
+    avisos.append(...construirAvisos(r, p).map(t => aviso(t)));
+  } catch (e) {
+    $("mesada").textContent = "Sin calcular";
+    $("equivalente").textContent = "";
+    avisos.append(aviso(e.message, true));
+  }
+}
+
+$("formulario").addEventListener("submit", e => e.preventDefault());
+$("formulario").addEventListener("input", mostrar);
+$("formulario").addEventListener("change", mostrar);
+$("agregar").addEventListener("click", () => { agregarFila(); mostrar(); });
+$("filas").addEventListener("click", e => {
+  if (e.target.closest(".quitar")) { e.target.closest(".fila").remove(); mostrar(); }
+});
+
+agregarFila("1995-01", "2004-12", 3000000);
+agregarFila("2005-01", "2014-12", 5000000);
+agregarFila("2015-01", "2024-12", 7000000);
+mostrar();
+</script>
+
+</body></html>

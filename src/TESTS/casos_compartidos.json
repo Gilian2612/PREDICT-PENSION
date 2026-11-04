@@ -1,0 +1,69 @@
+{
+  "_nota": "Casos que deben dar lo mismo en Python (tests.py) y en JavaScript (tests.js). Salario minimo de 1.000.000 para verificar a mano.",
+  "casos": [
+    {
+      "nombre": "hombre en transicion",
+      "entrada": {"sexo": "hombre", "año_nacimiento": 1966, "semanas_totales": 1500, "semanas_corte": 1250,
+                  "historial": [["2000-01", "2009-12", 7000000]], "smmlv": 1000000},
+      "esperado": {"año": 2028, "minimo": 1300, "transicion": true, "aplica_vida": true,
+                   "ibl": 7000000, "tasa": 68.0, "mesada": 4760000, "alterna": null}
+    },
+    {
+      "nombre": "usa el promedio de toda la vida si es mayor",
+      "entrada": {"sexo": "hombre", "año_nacimiento": 1966, "semanas_totales": 1500, "semanas_corte": 1250,
+                  "historial": [["1990-01", "1999-12", 9000000], ["2000-01", "2009-12", 3000000]], "smmlv": 1000000},
+      "esperado": {"ibl_10": 3000000, "ibl_vida": 6000000, "ibl": 6000000, "tasa": 68.5, "mesada": 4110000}
+    },
+    {
+      "nombre": "menos de 1250 semanas no usa toda la vida",
+      "entrada": {"sexo": "hombre", "año_nacimiento": 1966, "semanas_totales": 1200, "semanas_corte": 1100,
+                  "historial": [["2000-01", "2009-12", 7000000]], "smmlv": 1000000},
+      "esperado": {"aplica_vida": false, "ibl_vida": 0, "tasa": 62.0, "mesada": 4340000, "cumple_semanas": false}
+    },
+    {
+      "nombre": "fuera de transicion limita el IBL a 2,3 SMMLV",
+      "entrada": {"sexo": "hombre", "año_nacimiento": 1966, "semanas_totales": 1500, "semanas_corte": 800,
+                  "historial": [["2000-01", "2009-12", 7000000]], "smmlv": 1000000},
+      "esperado": {"transicion": false, "ibl": 2300000, "tasa": 70.35, "mesada": 1618050}
+    },
+    {
+      "nombre": "mesada minima de un SMMLV",
+      "entrada": {"sexo": "hombre", "año_nacimiento": 1966, "semanas_totales": 1500, "semanas_corte": 1250,
+                  "historial": [["2000-01", "2009-12", 500000]], "smmlv": 1000000},
+      "esperado": {"tasa": 71.0, "mesada": 1000000}
+    },
+    {
+      "nombre": "mesada maxima de 25 SMMLV",
+      "entrada": {"sexo": "hombre", "año_nacimiento": 1966, "semanas_totales": 1500, "semanas_corte": 1250,
+                  "historial": [["2000-01", "2009-12", 50000000]], "smmlv": 1000000},
+      "esperado": {"tasa": 61.0, "mesada": 25000000}
+    },
+    {
+      "nombre": "mujer cuenta adicionales desde 1300 y muestra la alterna",
+      "entrada": {"sexo": "mujer", "año_nacimiento": 1970, "semanas_totales": 1500, "semanas_corte": 1250,
+                  "historial": [["2000-01", "2009-12", 7000000]], "smmlv": 1000000, "mujer_desde": "1300"},
+      "esperado": {"año": 2027, "minimo": 1225, "tasa": 68.0, "mesada": 4760000,
+                   "base_alterna": 1225, "alterna": {"tasa": 69.5, "mesada": 4865000}}
+    },
+    {
+      "nombre": "mujer cuenta adicionales desde el minimo",
+      "entrada": {"sexo": "mujer", "año_nacimiento": 1970, "semanas_totales": 1500, "semanas_corte": 1250,
+                  "historial": [["2000-01", "2009-12", 7000000]], "smmlv": 1000000, "mujer_desde": "minimo"},
+      "esperado": {"tasa": 69.5, "mesada": 4865000, "base_alterna": 1300, "alterna": {"tasa": 68.0, "mesada": 4760000}}
+    },
+    {
+      "nombre": "año de pension posterior a la edad",
+      "entrada": {"sexo": "hombre", "año_nacimiento": 1966, "año_pension": 2030, "semanas_totales": 1500,
+                  "semanas_corte": 1250, "historial": [["2000-01", "2009-12", 7000000]], "smmlv": 1000000},
+      "esperado": {"año": 2030, "cumple_edad": true, "mesada": 4760000}
+    },
+    {
+      "nombre": "salarios de cada epoca actualizados con IPC",
+      "entrada": {"sexo": "hombre", "año_nacimiento": 1966, "semanas_totales": 1500, "semanas_corte": 1250,
+                  "historial": [["2000-01", "2009-12", 3500000]], "smmlv": 1000000, "en_pesos_de_hoy": false,
+                  "ipc": {"2000": 50, "2001": 50, "2002": 50, "2003": 50, "2004": 50, "2005": 50,
+                          "2006": 50, "2007": 50, "2008": 50, "2009": 50, "2028": 100}},
+      "esperado": {"ibl": 7000000, "tasa": 68.0, "mesada": 4760000}
+    }
+  ]
+}
